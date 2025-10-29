@@ -1,29 +1,34 @@
-### IntelliJ IDEA ###
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
+# Maven
+/target/
+!.mvn/wrapper/maven-wrapper.jar
 
-### Eclipse ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
+# IntelliJ / IDEA
+/.idea/
+/*.iml
+/.idea_modules/
 
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# Eclipse
+/.classpath
+/.project
+/.settings/
+/*.launch
 
-### VS Code ###
+# VS Code
 .vscode/
 
-### Mac OS ###
+# OS files
 .DS_Store
+Thumbs.db
+
+# Logs and temporary
+logs/
+*.log
+*.tmp
+
+# Build artifacts
+*.class
+
+# Other
+*.jar
+*.war
+*.ear
