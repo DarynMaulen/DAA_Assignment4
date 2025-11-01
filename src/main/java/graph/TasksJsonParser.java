@@ -11,52 +11,58 @@ import java.io.Reader;
 import java.util.ArrayList;
 import java.util.List;
 
-// Simple parser for the assignment JSON format.
-// Supports edge weight model and node durations.
+// Simple parser to read graph data from a JSON file in the assignment format.
 public class TasksJsonParser {
 
+    // Helper class for deserializing an edge from JSON.
     private static class EdgeDTO {
         int u;
         int v;
-        Integer w;
+        Integer w; // Weight
     }
 
+    // Helper class for deserializing a node from JSON.
     private static class NodeDTO {
         int id;
         Integer duration;
     }
 
+    // Root helper class for deserializing the entire graph JSON structure.
     private static class TasksDTO {
         boolean directed;
-        int n;
+        int n; // Number of nodes
         List<EdgeDTO> edges;
         List<NodeDTO> nodes;
         Integer source;
+        // Serialized name matches the 'weight_model' field in JSON.
         @SerializedName("weight_model")
         String weightModel;
     }
 
+    // Parses the JSON file and constructs a Graph object.
     public Graph parse(String filename) throws Exception {
         Gson gson = new Gson();
         try (Reader r = new FileReader(filename)) {
             TasksDTO dto = gson.fromJson(r, TasksDTO.class);
-            // build nodes (if nodes provided, use durations; otherwise create default nodes)
+            // use provided durations if available, otherwise create default nodes.
             List<Node> nodes = new ArrayList<>();
             if (dto.nodes != null && !dto.nodes.isEmpty()) {
-                // use provided nodes; ensure count matches dto.n or fill missing
+                // Use provided nodes and their durations.
                 for (NodeDTO nd : dto.nodes) {
                     nodes.add(new Node(nd.id, nd.duration));
                 }
-                // fill missing ids if any
+                // Fill in any missing nodes up to dto.n with null duration.
                 for (int i = nodes.size(); i < dto.n; i++) {
                     nodes.add(new Node(i, null));
                 }
             } else {
+                // Create all nodes with null duration if 'nodes' array is missing.
                 for (int i = 0; i < dto.n; i++) {
                     nodes.add(new Node(i, null));
                 }
             }
 
+            // Build edges list from DTOs.
             List<Edge> edges = new ArrayList<>();
             if (dto.edges != null) {
                 for (EdgeDTO e : dto.edges) {
@@ -64,6 +70,7 @@ public class TasksJsonParser {
                 }
             }
 
+            // Construct and return the final Graph object.
             return new Graph(dto.directed, dto.n, nodes, edges, dto.source, dto.weightModel);
         }
     }

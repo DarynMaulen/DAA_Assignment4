@@ -3,45 +3,83 @@ package utils;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
-import java.io.File;
 import java.io.FileWriter;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
 import java.util.Map;
 
-// Write per-dataset JSON result and summary CSV line.
+// Export per-dataset JSON payloads and a summary CSV.
+// On construction the summary.csv is created and header written.
 public class ResultsExporter {
     private final Gson gson = new GsonBuilder().setPrettyPrinting().create();
-    private final File outDir;
-    private final File summaryCsv;
+    private final Path outDir;
+    private final Path summaryCsv;
 
-    public ResultsExporter(String outDirPath) throws Exception {
-        outDir = new File(outDirPath);
-        if(!outDir.exists()){
-            outDir.mkdirs();
-        }
-        summaryCsv = new File(outDir, "summary.csv");
-        if(!summaryCsv.exists()){
-            try(PrintWriter pw = new PrintWriter(summaryCsv)) {
-                pw.println("dataset,n,m,weight_model,scc_count,time_scc_ns,time_condense_ns,time_topo_ns,time_dag_ns,dag_relaxations,critical_path_len,critical_path_nodes");
-            }
-        }
+    private static final String CSV_HEADER =
+            "dataset,n,m,weight_model,scc_count,"
+                    + "time_scc_ns,time_condense_ns,time_topo_ns,time_dag_ns,dag_relaxations,"
+                    + "critical_path_len,critical_path_nodes,"
+                    + "shortest_path_length,shortest_path_nodes,"
+                    + "component_order,derived_task_order\n";
+
+    public ResultsExporter(String outDirPath) throws IOException {
+        this.outDir = Paths.get(outDirPath);
+        if (!Files.exists(outDir)) Files.createDirectories(outDir);
+        this.summaryCsv = outDir.resolve("summary.csv");
+
+        // create or truncate the CSV and write header
+        Files.write(summaryCsv,
+                CSV_HEADER.getBytes(StandardCharsets.UTF_8),
+                StandardOpenOption.CREATE,
+                StandardOpenOption.TRUNCATE_EXISTING);
     }
 
-    public void writeDatasetJson(String datasetName, Map<String,Object> payload) throws Exception {
-        File out = new File(outDir, datasetName + ".json");
-        try(FileWriter fw = new FileWriter(out)) {
+    // Write detailed per-dataset JSON.
+    public void writeDatasetJson(String datasetName, Map<String, Object> payload) throws IOException {
+        Path out = outDir.resolve(datasetName + ".json");
+        try (FileWriter fw = new FileWriter(out.toFile(), StandardCharsets.UTF_8)) {
             gson.toJson(payload, fw);
         }
     }
 
-    public void appendSummaryCsv(String datasetName, int n, int m, String weightModel,
-                                 int sccCount, long timeScc, long timeCondensation, long timeTopo, long timeDag,
-                                 long dagRelaxations, long criticalLen, String criticalPathNodes) throws Exception {
-        String line = String.format("%s,%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%s",
-                datasetName, n, m, weightModel, sccCount, timeScc, timeCondensation, timeTopo, timeDag, dagRelaxations, criticalLen,
-                criticalPathNodes.replaceAll(",", ";"));
-        Files.write(summaryCsv.toPath(), (line + System.lineSeparator()).getBytes(), StandardOpenOption.APPEND);
+    // Append one CSV line to summary.csv.
+    public void appendSummaryCsv(String datasetName,
+                                 int n, int m, String weightModel, int sccCount,
+                                 long timeScc, long timeCondensation, long timeTopo, long timeDag,
+                                 long dagRelaxations,
+                                 long criticalLen, String criticalPathNodes,
+                                 long shortestPathLen, String shortestPathNodes,
+                                 String componentOrder, String derivedTaskOrder) throws IOException {
+
+        // replace commas with semicolons so they don't break CSV column splitting
+        String sanitizedCritical = (criticalPathNodes == null) ? "" : criticalPathNodes.replace(",", ";");
+        String sanitizedShortest = (shortestPathNodes == null) ? "" : shortestPathNodes.replace(",", ";");
+        String sanitizedComponentOrder = (componentOrder == null) ? "" : componentOrder.replace(",", ";");
+        String sanitizedDerivedTaskOrder = (derivedTaskOrder == null) ? "" : derivedTaskOrder.replace(",", ";");
+
+        // build CSV line exactly matching header columns
+        String line = String.format("%s,%d,%d,%s,%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%s,%s",
+                datasetName,
+                n,
+                m,
+                weightModel,
+                sccCount,
+                timeScc,
+                timeCondensation,
+                timeTopo,
+                timeDag,
+                dagRelaxations,
+                criticalLen,
+                sanitizedCritical,
+                shortestPathLen,
+                sanitizedShortest,
+                sanitizedComponentOrder,
+                sanitizedDerivedTaskOrder
+        );
+
+        Files.write(summaryCsv,
+                (line + System.lineSeparator()).getBytes(StandardCharsets.UTF_8),
+                StandardOpenOption.APPEND);
     }
 }
