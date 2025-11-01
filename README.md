@@ -140,6 +140,8 @@ This section documents algorithm choices, data structures, pseudocode, complexit
 
 ***Phase time breakdown***
 
+![](phasetimebreakdowm.png)
+
 This grouped bar chart shows the runtime (in nanoseconds) spent in each major phase — SCC detection, condensation, topological sort, and DAG dynamic programming — for each dataset.
 
 Observations:
@@ -152,6 +154,8 @@ Observations:
 
 ***SCC time vs number of edges***
 
+![](SCCtimevsnumberofedges.png)
+
 Scatter plot of time_scc_ns vs number of edges.
 
 Interpretation:
@@ -162,6 +166,8 @@ Interpretation:
 
 ***Critical path length vs n***
 
+![](Criticalpathlengthvsn.png)
+
 Scatter of critical_path_len vs number of nodes.
 
 Interpretation:
@@ -169,6 +175,9 @@ Interpretation:
 * Critical path length tends to increase with graph size, but structure matters: graphs with many cycles can compress into single components, driving critical_path_len up if a big component contains many nodes whose durations sum up. Example: large_dense.json critical_path_len = 233 (large), while large_sparse.json = 4 (small).
 
 ***SCC counts vs average component size***
+
+| ![](scccountperdatasetpng.png) | ![](averagecomponentsizeperdataset.png) |
+|--------------------------------|-----------------------------------------|
 
 These two bar charts summarize how well condensation compresses the graph.
 
@@ -190,8 +199,4 @@ From the above figures:
 
 ## Conclusion
 
-This project demonstrates a practical, efficient pipeline for scheduling dependent Smart City / Smart Campus tasks by combining SCC detection, condensation to a DAG, topological ordering, and DP-based shortest,longest path computation. Empirical results confirm the theoretical expectations:
-
-* Tarjan scales with edges and dominates runtime on dense graphs.
-
-* Condensation + Topo reduce the scheduling problem to a DAG, when many small components remain these phases become significant.
+The analysis shows that the implemented pipeline performs as expected: Tarjan’s SCC detection dominates runtime on dense graphs, while condensation and topological sorting simplify the problem but add minor overhead. The DAG shortest and longest path algorithms run efficiently and correctly identify critical paths. Overall, results confirm linear scalability with graph size, consistent metric behavior, and reliable performance across datasets, demonstrating that the approach is both correct and efficient for task scheduling and analysis.
