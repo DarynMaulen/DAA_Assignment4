@@ -9,16 +9,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+// Finds the longest paths (critical paths) in the Condensation Graph.
 public class LongestPath {
-    // derive to avoid overflow
+    // Defined a very small value to represent negative infinity, avoiding overflow when added.
     private static final long NEG_INF = Long.MIN_VALUE / 4;
 
+    // Main method to compute longest paths from a source node.
     public SPResult longestPath(CondensationResult condensationResult, Graph graph, TopoResult topo,
                                 int sourceNode, String weightModel, Metrics metrics) {
         if(metrics != null){
             metrics.startTimer();
         }
 
+        // Input validation checks.
         if(sourceNode < 0 || sourceNode >= graph.getN()){
             throw new IllegalArgumentException("sourceNode must be a positive integer");
         }
@@ -29,9 +32,11 @@ public class LongestPath {
             throw new IllegalArgumentException("Invalid source node/component");
         }
 
+        // Precalculate component weights and edge weights.
         long[]componentWeight = ComponentUtils.buildComponentWeight(condensationResult,graph);
         List<Map<Integer, Integer>> componentEdgeWeight = ComponentUtils.buildComponentEdgeWeight(condensationResult, graph);
 
+        // Initialize best and parent arrays.
         long[] best = new long[k];
         int[] parent = new int[k];
         for(int i =0; i<k; i++){
@@ -39,6 +44,7 @@ public class LongestPath {
             parent[i] = -1;
         }
 
+        // Set initial distance for the source component.
         if("node".equals(weightModel)){
             best[sourceComponent] = componentWeight[sourceComponent];
         }else{
@@ -48,15 +54,18 @@ public class LongestPath {
         List<Integer> componentOrder = topo.getComponentOrder();
         List<Set<Integer>> adj = condensationResult.getAdjacentComponents();
 
+        // Iterate through components in topological order to relax edges.
         for(int u : componentOrder){
             if(best[u] == NEG_INF){
-                continue;
+                continue; // Skip unreachable components.
             }
+            // Relax outgoing edges from the current component.
             for(int v : adj.get(u)){
                 if(metrics != null){
                     metrics.inc("dag.relaxations");
                 }
                 long weight;
+                // Determine the weight of the edge.
                 if("node".equals(weightModel)){
                     weight = componentWeight[v];
                 }else {
@@ -68,11 +77,12 @@ public class LongestPath {
                     weight = edgeWeight;
                 }
                 long candidate = best[u] + weight;
+                // Relaxation step: check for longer path.
                 if(candidate > best[v]){
                     best[v] = candidate;
                     parent[v] = u;
                     if(metrics != null){
-                        metrics.inc("dag.rel.success");
+                        metrics.inc("dag.relaxations");
                     }
                 }
             }

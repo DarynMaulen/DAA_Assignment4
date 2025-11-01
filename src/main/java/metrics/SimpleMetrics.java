@@ -1,12 +1,14 @@
 package metrics;
 
-import java.util.Collections;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
+// SimpleMetrics class: Implementation of the Metrics interface using a concurrent map for counters and basic timer logic.
 public class SimpleMetrics implements Metrics {
+    // Map to store counters and metrics.
     private final ConcurrentHashMap<String, Long> map = new ConcurrentHashMap<>();
+    // Start time marker in nanoseconds.
     private long start = 0L;
+    // Last measured elapsed time.
     private long lastElapsed = 0L;
 
     @Override
@@ -42,10 +44,5 @@ public class SimpleMetrics implements Metrics {
     @Override
     public long get(String key) {
         return map.getOrDefault(key, 0L);
-    }
-
-    @Override
-    public Map<String, Long> allCounters() {
-        return Collections.unmodifiableMap(map);
     }
 }

@@ -2,6 +2,7 @@ package metrics;
 
 import java.util.Map;
 
+// Interface Metrics: Defines methods for timing execution and collecting counters long-value metrics.
 public interface Metrics {
     void startTimer();
     void stopTimer();
@@ -10,5 +11,4 @@ public interface Metrics {
     void incBy(String counter, long delta);
     void putLong(String key, long value);
     long get(String key);
-    Map<String, Long> allCounters();
 }

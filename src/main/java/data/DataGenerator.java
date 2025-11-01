@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-
+// Utility class for generating various graph datasets in JSON format.
 public class DataGenerator {
     private static final Random rand = new Random(100);
     private static final Gson gson = new GsonBuilder().setPrettyPrinting().create();
