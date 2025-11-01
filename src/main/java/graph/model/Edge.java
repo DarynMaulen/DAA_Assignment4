@@ -3,11 +3,12 @@ package graph.model;
 public class Edge {
     private final int u;
     private final int v;
-    private final Integer weight = null;
+    private final Integer weight;
 
     public Edge(int u, int v, Integer weight) {
         this.u = u;
         this.v = v;
+        this.weight = weight;
     }
 
     public int getU() {
